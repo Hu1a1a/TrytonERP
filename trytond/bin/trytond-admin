@@ -27,4 +27,5 @@ commandline.config_log(options)
 
 # Import after application is configured
 import trytond.admin as admin
+
 admin.run(options)
