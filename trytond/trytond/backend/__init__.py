@@ -11,8 +11,13 @@ except ImportError:
 from trytond.config import config
 
 __all__ = [
-    'name', 'Database', 'TableHandler',
-    'DatabaseIntegrityError', 'DatabaseDataError', 'DatabaseOperationalError']
+    'name',
+    'Database',
+    'TableHandler',
+    'DatabaseIntegrityError',
+    'DatabaseDataError',
+    'DatabaseOperationalError'
+]
 
 
 name = urllib.parse.urlparse(config.get('database', 'uri', default='')).scheme

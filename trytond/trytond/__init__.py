@@ -13,11 +13,11 @@ try:
 except ImportError:
     requests_utils = None
 
-__version__ = "7.0.2"
+__version__ = '7.0.2'
 
 os.environ.setdefault(
-    'TRYTOND_APPNAME',
-    os.path.basename(getattr(__main__, '__file__', 'trytond')))
+    'TRYTOND_APPNAME', os.path.basename(getattr(__main__, '__file__', 'trytond'))
+)
 os.environ.setdefault('TRYTOND_TZ', os.environ.get('TZ', 'UTC'))
 os.environ['TZ'] = 'UTC'
 if hasattr(time, 'tzset'):
@@ -34,7 +34,7 @@ etree.set_default_parser(etree.XMLParser(resolve_entities=False))
 objectify.set_default_parser(objectify.makeparser(resolve_entities=False))
 
 
-def default_user_agent(name="Tryton"):
+def default_user_agent(name='Tryton'):
     return f"{name}/{__version__}"
 
 

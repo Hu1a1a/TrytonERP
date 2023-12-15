@@ -10,8 +10,14 @@ import __main__ as main
 
 from . import status
 
-__all__ = ['config', 'get_hostname', 'get_port', 'split_netloc',
-    'parse_listen', 'parse_uri']
+__all__ = [
+    'config',
+    'get_hostname',
+    'get_port',
+    'split_netloc',
+    'parse_listen',
+    'parse_uri'
+]
 logger = logging.getLogger(__name__)
 
 # Needed so urlunsplit to always set netloc
@@ -48,19 +54,24 @@ def parse_uri(uri):
 
 
 class TrytonConfigParser(configparser.ConfigParser):
-
     def __init__(self):
         super().__init__(interpolation=None)
         self.add_section('web')
-        self.set('web', 'listen', 'localhost:8000')
+        self.set('web', 'listen', '0.0.0.0:8000')
+        # self.set('web', 'hostname', "")
         self.set('web', 'root', os.path.join(os.path.expanduser('~'), 'www'))
         self.set('web', 'num_proxies', '0')
         self.set('web', 'cache_timeout', str(60 * 60 * 12))
+        # self.set('web', 'cors', [])
+        # self.set('web', 'avatar_base', '')
+        # self.set('web', 'avatar_timeout',  str(60 * 60 * 24 * 7))
         self.add_section('database')
-        self.set('database', 'uri',
-            os.environ.get('TRYTOND_DATABASE_URI', 'sqlite://'))
-        self.set('database', 'path', os.path.join(
-                os.path.expanduser('~'), 'db'))
+        self.set(
+            'database',
+            'uri',
+            'postgresql://Tryton:Yang1234....@trytondb.postgres.database.azure.com:5432/'
+        )
+        self.set('database', 'path', os.path.join(os.path.expanduser('~'), 'db'))
         self.set('database', 'list', 'True')
         self.set('database', 'retry', '5')
         self.set('database', 'language', 'en')
@@ -68,8 +79,7 @@ class TrytonConfigParser(configparser.ConfigParser):
         self.set('database', 'subquery_threshold', str(1_000))
         self.add_section('request')
         self.set('request', 'max_size', str(2 * 1024 * 1024))
-        self.set('request', 'max_size_authenticated',
-            str(2 * 1024 * 1024 * 1024))
+        self.set('request', 'max_size_authenticated', str(2 * 1024 * 1024 * 1024))
         self.add_section('cache')
         self.set('cache', 'transaction', '10')
         self.set('cache', 'model', '200')
@@ -109,7 +119,7 @@ class TrytonConfigParser(configparser.ConfigParser):
             if not key.startswith('TRYTOND_'):
                 continue
             try:
-                section, option = key[len('TRYTOND_'):].lower().split('__', 1)
+                section, option = key[len('TRYTOND_') :].lower().split('__', 1)
             except ValueError:
                 continue
             if section.startswith('wsgi_'):
@@ -127,43 +137,49 @@ class TrytonConfigParser(configparser.ConfigParser):
         read_files = self.read(configfile)
         logger.info('using %s as configuration files', ', '.join(read_files))
         if configfile != read_files:
-            logger.error('could not load %s',
-                ','.join(set(configfile) - set(read_files)))
+            logger.error(
+                'could not load %s', ','.join(set(configfile) - set(read_files))
+            )
         return configfile
 
     def get(self, section, option, *args, **kwargs):
         default = kwargs.pop('default', None)
         try:
-            return configparser.RawConfigParser.get(self, section, option,
-                *args, **kwargs)
+            return configparser.RawConfigParser.get(
+                self, section, option, *args, **kwargs
+            )
         except (configparser.NoOptionError, configparser.NoSectionError):
             return default
 
     def getint(self, section, option, *args, **kwargs):
         default = kwargs.pop('default', None)
         try:
-            return configparser.RawConfigParser.getint(self, section, option,
-                *args, **kwargs)
-        except (configparser.NoOptionError, configparser.NoSectionError,
-                TypeError):
+            return configparser.RawConfigParser.getint(
+                self, section, option, *args, **kwargs
+            )
+        except (configparser.NoOptionError, configparser.NoSectionError, TypeError):
             return default
 
     def getfloat(self, section, option, *args, **kwargs):
         default = kwargs.pop('default', None)
         try:
-            return configparser.RawConfigParser.getfloat(self, section, option,
-                *args, **kwargs)
-        except (configparser.NoOptionError, configparser.NoSectionError,
-                TypeError):
+            return configparser.RawConfigParser.getfloat(
+                self, section, option, *args, **kwargs
+            )
+        except (configparser.NoOptionError, configparser.NoSectionError, TypeError):
             return default
 
     def getboolean(self, section, option, *args, **kwargs):
         default = kwargs.pop('default', None)
         try:
             return configparser.RawConfigParser.getboolean(
-                self, section, option, *args, **kwargs)
-        except (configparser.NoOptionError, configparser.NoSectionError,
-                AttributeError):
+                self, section, option, *args, **kwargs
+            )
+        except (
+            configparser.NoOptionError,
+            configparser.NoSectionError,
+            AttributeError
+        ):
             return default
 
 
