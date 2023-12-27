@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ff6a5b665687cdcc388ed9237cbe8c1fee6e038c8549e3ed97466de37c3eeb46
-size 44
+/dist
+/build
+/js
+/node_modules
+/.angular
+/_build
