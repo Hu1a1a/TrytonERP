@@ -105,7 +105,7 @@ module.exports = function (grunt) {
           "dist/<%= pkg.name %>.css": "src/sao.less",
         },
       },
-      default: {
+      build: {
         options: {
           paths: less_paths,
           yuicompress: true,
