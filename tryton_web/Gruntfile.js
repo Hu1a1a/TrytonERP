@@ -153,7 +153,7 @@ module.exports = function (grunt) {
   grunt.registerTask("dev", "Build for development.", function () {
     grunt.task.run(["concat", "jshint", "less:dev"]);
   });
-  grunt.registerTask("devwatch", "Watch development", function () {
+  grunt.registerTask("serve", "Watch development", function () {
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.task.run(["watch"]);
   });

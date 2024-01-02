@@ -36,6 +36,7 @@
     "test": "npx grunt test -v",
     "postinstall": "npx bower install",
     "dev": "npx grunt dev",
+    "serve": "npx grunt serve",
     "build": "npx grunt build"
   },
   "devDependencies": {
