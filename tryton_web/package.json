@@ -35,7 +35,8 @@
   "scripts": {
     "test": "npx grunt test -v",
     "postinstall": "npx bower install",
-    "build": "npx grunt dev"
+    "dev": "npx grunt dev",
+    "build": "npx grunt build"
   },
   "devDependencies": {
     "grunt-contrib-nodeunit": "^2.0",
@@ -55,6 +56,7 @@
     "grunt-contrib-concat": "^1.0",
     "grunt-contrib-jshint": "^2.1",
     "grunt-contrib-less": "^2.0",
-    "grunt-contrib-uglify": "^5.0"
+    "grunt-contrib-uglify": "^5.0",
+    "po2json": "^0.4.5"
   }
 }
