@@ -24,8 +24,8 @@ from trytond.transaction import Transaction
 
 logger = logging.getLogger(__name__)
 
-ir_module = Table('ir_module')
-ir_model_data = Table('ir_model_data')
+ir_module = Table("ir_module")
+ir_model_data = Table("ir_model_data")
 
 OPJ = os.path.join
 MODULES_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -35,13 +35,14 @@ MODULES = []
 
 def get_module_info(name):
     "Return the content of the tryton.cfg"
+    # print(name)
     module_config = configparser.ConfigParser()
-    with tools.file_open(os.path.join(name, 'tryton.cfg')) as fp:
+    with tools.file_open(os.path.join(name, "tryton.cfg")) as fp:
         module_config.read_file(fp)
         directory = os.path.dirname(fp.name)
-    info = dict(module_config.items('tryton'))
-    info['directory'] = directory
-    for key in ('depends', 'extras_depend', 'xml'):
+    info = dict(module_config.items("tryton"))
+    info["directory"] = directory
+    for key in ("depends", "extras_depend", "xml"):
         if key in info:
             info[key] = info[key].strip().splitlines()
     return info
@@ -97,9 +98,11 @@ def create_graph(modules):
     all_deps = set()
     graph = Graph()
     for module in modules:
+        #print(module)
         info = get_module_info(module)
-        deps = info.get('depends', []) + [
-            d for d in info.get('extras_depend', []) if d in modules]
+        deps = info.get("depends", []) + [
+            d for d in info.get("extras_depend", []) if d in modules
+        ]
         node = graph.add(module, deps)
         assert node.info is None
         node.info = info
@@ -119,21 +122,21 @@ def is_module_to_install(module, update):
 
 def load_translations(pool, node, languages):
     module = node.name
-    localedir = '%s/%s' % (node.info['directory'], 'locale')
+    localedir = "%s/%s" % (node.info["directory"], "locale")
     lang2filenames = defaultdict(list)
     for filename in itertools.chain(
-            iglob('%s/*.po' % localedir),
-            iglob('%s/override/*.po' % localedir)):
-        filename = filename.replace('/', os.sep)
+        iglob("%s/*.po" % localedir), iglob("%s/override/*.po" % localedir)
+    ):
+        filename = filename.replace("/", os.sep)
         lang = os.path.splitext(os.path.basename(filename))[0]
         if lang not in languages:
             continue
         lang2filenames[lang].append(filename)
-    base_path_position = len(node.info['directory']) + 1
+    base_path_position = len(node.info["directory"]) + 1
     for language, files in lang2filenames.items():
         filenames = [f[base_path_position:] for f in files]
-        logger.info('%s:loading %s', module, ','.join(filenames))
-        Translation = pool.get('ir.translation')
+        logger.info("%s:loading %s", module, ",".join(filenames))
+        Translation = pool.get("ir.translation")
         Translation.translation_import(language, module, files)
 
 
@@ -143,7 +146,7 @@ def load_module_graph(graph, pool, update=None, lang=None):
     from trytond.ir.lang import get_parent_language
 
     if lang is None:
-        lang = [config.get('database', 'language')]
+        lang = [config.get("database", "language")]
     if update is None:
         update = []
     modules_todo = []
@@ -162,8 +165,13 @@ def load_module_graph(graph, pool, update=None, lang=None):
         modules = [x.name for x in graph]
         module2state = dict()
         for sub_modules in tools.grouped_slice(modules):
-            cursor.execute(*ir_module.select(ir_module.name, ir_module.state,
-                    where=ir_module.name.in_(list(sub_modules))))
+            cursor.execute(
+                *ir_module.select(
+                    ir_module.name,
+                    ir_module.state,
+                    where=ir_module.name.in_(list(sub_modules)),
+                )
+            )
             module2state.update(cursor)
         modules = set(modules)
 
@@ -175,57 +183,72 @@ def load_module_graph(graph, pool, update=None, lang=None):
             classes = pool.fill(module, modules)
             if update:
                 pool.setup(classes)
-            package_state = module2state.get(module, 'not activated')
-            if (is_module_to_install(module, update)
-                    or (update
-                        and package_state in ('to activate', 'to upgrade'))):
-                if package_state not in ('to activate', 'to upgrade'):
-                    if package_state == 'activated':
-                        package_state = 'to upgrade'
-                    elif package_state != 'to remove':
-                        package_state = 'to activate'
+            package_state = module2state.get(module, "not activated")
+            if is_module_to_install(module, update) or (
+                update and package_state in ("to activate", "to upgrade")
+            ):
+                if package_state not in ("to activate", "to upgrade"):
+                    if package_state == "activated":
+                        package_state = "to upgrade"
+                    elif package_state != "to remove":
+                        package_state = "to activate"
                 for child in node:
                     module2state[child.name] = package_state
                 for type in list(classes.keys()):
                     for cls in classes[type]:
-                        logger.info('%s:register %s', module, cls.__name__)
+                        logger.info("%s:register %s", module, cls.__name__)
                         cls.__register__(module)
-                for model in classes['model']:
-                    if hasattr(model, '_history'):
+                for model in classes["model"]:
+                    if hasattr(model, "_history"):
                         models_to_update_history.add(model.__name__)
-                    if hasattr(model, '_update_sql_indexes'):
+                    if hasattr(model, "_update_sql_indexes"):
                         models_with_indexes.add(model.__name__)
 
                 # Instanciate a new parser for the module
                 tryton_parser = convert.TrytondXmlHandler(
-                    pool, module, package_state, modules, lang)
+                    pool, module, package_state, modules, lang
+                )
 
-                for filename in node.info.get('xml', []):
-                    filename = filename.replace('/', os.sep)
-                    logger.info('%s:loading %s', module, filename)
+                for filename in node.info.get("xml", []):
+                    filename = filename.replace("/", os.sep)
+                    logger.info("%s:loading %s", module, filename)
                     # Feed the parser with xml content:
-                    with tools.file_open(OPJ(module, filename), 'rb') as fp:
+                    with tools.file_open(OPJ(module, filename), "rb") as fp:
                         tryton_parser.parse_xmlstream(fp)
 
                 modules_todo.append((module, list(tryton_parser.to_delete)))
 
                 load_translations(pool, node, lang)
 
-                if package_state == 'to remove':
+                if package_state == "to remove":
                     continue
-                cursor.execute(*ir_module.select(ir_module.id,
-                        where=(ir_module.name == module)))
+                cursor.execute(
+                    *ir_module.select(ir_module.id, where=(ir_module.name == module))
+                )
                 try:
-                    module_id, = cursor.fetchone()
-                    cursor.execute(*ir_module.update([ir_module.state],
-                            ['activated'], where=(ir_module.id == module_id)))
+                    (module_id,) = cursor.fetchone()
+                    cursor.execute(
+                        *ir_module.update(
+                            [ir_module.state],
+                            ["activated"],
+                            where=(ir_module.id == module_id),
+                        )
+                    )
                 except TypeError:
-                    cursor.execute(*ir_module.insert(
-                            [ir_module.create_uid, ir_module.create_date,
-                                ir_module.name, ir_module.state],
-                            [[0, CurrentTimestamp(), module, 'activated'],
-                                ]))
-                module2state[module] = 'activated'
+                    cursor.execute(
+                        *ir_module.insert(
+                            [
+                                ir_module.create_uid,
+                                ir_module.create_date,
+                                ir_module.name,
+                                ir_module.state,
+                            ],
+                            [
+                                [0, CurrentTimestamp(), module, "activated"],
+                            ],
+                        )
+                    )
+                module2state[module] = "activated"
 
             # Rollback cache changes to prevent dead lock on ir.cache table
             Cache.rollback(transaction)
@@ -242,9 +265,9 @@ def load_module_graph(graph, pool, update=None, lang=None):
             pool.setup()
         else:
             # Remove unknown models and fields
-            Model = pool.get('ir.model')
+            Model = pool.get("ir.model")
             Model.clean()
-            ModelField = pool.get('ir.model.field')
+            ModelField = pool.get("ir.model.field")
             ModelField.clean()
             transaction.commit()
 
@@ -254,13 +277,13 @@ def load_module_graph(graph, pool, update=None, lang=None):
             for model_name in models_with_indexes:
                 model = pool.get(model_name)
                 if model._sql_indexes:
-                    logger.info('index:create %s', model_name)
+                    logger.info("index:create %s", model_name)
                     model._update_sql_indexes()
             transaction.commit()
             for model_name in models_to_update_history:
                 model = pool.get(model_name)
                 if model._history:
-                    logger.info('history:update %s', model.__name__)
+                    logger.info("history:update %s", model.__name__)
                     model._update_history_table()
             transaction.commit()
 
@@ -273,55 +296,58 @@ def load_module_graph(graph, pool, update=None, lang=None):
             # Ensure cache is clear for other instances
             Cache.clear_all()
             Cache.refresh_pool(transaction)
-    logger.info('all modules loaded')
+    logger.info("all modules loaded")
 
 
 def get_modules(with_test=False):
-    modules = {'ir', 'res'}
+    modules = {"ir", "res"}
     if os.path.exists(MODULES_PATH) and os.path.isdir(MODULES_PATH):
         for file in os.listdir(MODULES_PATH):
-            if file.startswith('.'):
+            if file.startswith("."):
                 continue
-            if file == '__pycache__':
+            if file == "__pycache__":
                 continue
             if os.path.isdir(OPJ(MODULES_PATH, file)):
                 modules.add(file)
-    for ep in entry_points().select(group='trytond.modules'):
+    for ep in entry_points().select(group="trytond.modules"):
         modules.add(ep.name)
     if with_test:
-        modules.add('tests')
+        modules.add("tests")
+    # print(modules)
     return modules
 
 
 def register_classes(with_test=False):
-    '''
+    """
     Import modules to register the classes in the Pool
-    '''
+    """
     import trytond.ir
+
     trytond.ir.register()
     import trytond.res
+
     trytond.res.register()
     if with_test:
         import trytond.tests
+
         trytond.tests.register()
 
     for node in create_graph(get_modules(with_test=with_test)):
         module_name = node.name
-        logger.info('%s:registering classes', module_name)
+        logger.info("%s:registering classes", module_name)
 
-        if module_name in ('ir', 'res', 'tests'):
+        if module_name in ("ir", "res", "tests"):
             MODULES.append(module_name)
             continue
 
-        module = importlib.import_module(f'trytond.modules.{module_name}')
+        module = importlib.import_module(f"trytond.modules.{module_name}")
         # Some modules register nothing in the Pool
-        if hasattr(module, 'register'):
+        if hasattr(module, "register"):
             module.register()
         MODULES.append(module_name)
 
 
-def load_modules(
-        database_name, pool, update=None, lang=None, activatedeps=False):
+def load_modules(database_name, pool, update=None, lang=None, activatedeps=False):
     # Do not import backend when importing module
     res = True
     if update:
@@ -333,16 +359,27 @@ def load_modules(
         global res
         transaction = Transaction()
 
-        with transaction.set_context(_no_trigger=True), \
-                transaction.connection.cursor() as cursor:
+        with transaction.set_context(
+            _no_trigger=True
+        ), transaction.connection.cursor() as cursor:
             if update:
-                cursor.execute(*ir_module.select(ir_module.name,
-                        where=ir_module.state.in_(('activated', 'to activate',
-                                'to upgrade', 'to remove'))))
+                cursor.execute(
+                    *ir_module.select(
+                        ir_module.name,
+                        where=ir_module.state.in_(
+                            ("activated", "to activate", "to upgrade", "to remove")
+                        ),
+                    )
+                )
             else:
-                cursor.execute(*ir_module.select(ir_module.name,
-                        where=ir_module.state.in_(('activated', 'to upgrade',
-                                'to remove'))))
+                cursor.execute(
+                    *ir_module.select(
+                        ir_module.name,
+                        where=ir_module.state.in_(
+                            ("activated", "to upgrade", "to remove")
+                        ),
+                    )
+                )
             modules = {name for (name,) in cursor}
             graph = None
             while graph is None:
@@ -356,30 +393,41 @@ def load_modules(
 
             load_module_graph(graph, pool, update, lang)
 
-            Configuration = pool.get('ir.configuration')
+            Configuration = pool.get("ir.configuration")
             Configuration(1).check()
 
             if update:
-                cursor.execute(*ir_module.select(ir_module.name,
-                        where=(ir_module.state == 'to remove')))
-                for mod_name, in cursor:
+                cursor.execute(
+                    *ir_module.select(
+                        ir_module.name, where=(ir_module.state == "to remove")
+                    )
+                )
+                for (mod_name,) in cursor:
                     res = False
                     # TODO check if ressource not updated by the user
                     with transaction.connection.cursor() as cursor_delete:
-                        cursor_delete.execute(*ir_model_data.select(
-                                ir_model_data.model, ir_model_data.db_id,
+                        cursor_delete.execute(
+                            *ir_model_data.select(
+                                ir_model_data.model,
+                                ir_model_data.db_id,
                                 where=(ir_model_data.module == mod_name),
-                                order_by=ir_model_data.id.desc))
+                                order_by=ir_model_data.id.desc,
+                            )
+                        )
                         for rmod, rid in cursor_delete:
                             Model = pool.get(rmod)
                             Model.delete([Model(rid)])
                     transaction.connection.commit()
-                cursor.execute(*ir_module.update([ir_module.state],
-                        ['not activated'],
-                        where=(ir_module.state == 'to remove')))
+                cursor.execute(
+                    *ir_module.update(
+                        [ir_module.state],
+                        ["not activated"],
+                        where=(ir_module.state == "to remove"),
+                    )
+                )
                 transaction.connection.commit()
 
-                Module = pool.get('ir.module')
+                Module = pool.get("ir.module")
                 Module.update_list()
         # Need to commit to unlock SQLite database
         transaction.commit()
@@ -388,9 +436,9 @@ def load_modules(
         with Transaction().start(database_name, 0):
             _load_modules(update)
     else:
-        with Transaction().new_transaction(), \
-                Transaction().set_user(0), \
-                Transaction().reset_context():
+        with Transaction().new_transaction(), Transaction().set_user(
+            0
+        ), Transaction().reset_context():
             _load_modules(update)
 
     return res
