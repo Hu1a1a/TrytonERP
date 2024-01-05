@@ -2182,7 +2182,7 @@
             if (isUndefined(values)) {
                 data = getLocale(key);
             } else {
-                data = defineLocale(key, values);
+                data = updateLocale(key, values);
             }
 
             if (data) {
@@ -2201,7 +2201,7 @@
         return globalLocale._abbr;
     }
 
-    function updateLocale(name, config) {
+    function defineLocale(name, config) {
         if (config !== null) {
             var locale,
                 parentConfig = baseConfig;
@@ -2210,7 +2210,7 @@
                 deprecateSimple(
                     'defineLocaleOverride',
                     'use moment.updateLocale(localeName, config) to change ' +
-                        'an existing locale. moment.updateLocale(localeName, ' +
+                        'an existing locale. moment.defineLocale(localeName, ' +
                         'config) should only be used for creating a new locale ' +
                         'See http://momentjs.com/guides/#/warnings/define-locale/ for more info.'
                 );
@@ -2238,7 +2238,7 @@
 
             if (localeFamilies[name]) {
                 localeFamilies[name].forEach(function (x) {
-                    defineLocale(x.name, x.config);
+                    updateLocale(x.name, x.config);
                 });
             }
 
