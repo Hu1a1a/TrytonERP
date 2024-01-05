@@ -1,2 +1,2 @@
-Sao.config.title = "BC";
-$("#title").text = "BC";
+Sao.config.title = "RivaCold BC";
+$("#title").text = "RivaCold BC";
