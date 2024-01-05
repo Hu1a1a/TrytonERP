@@ -2176,7 +2176,7 @@ function getSetGlobalLocale(key, values) {
         if (isUndefined(values)) {
             data = getLocale(key);
         } else {
-            data = defineLocale(key, values);
+            data = updateLocale(key, values);
         }
 
         if (data) {
@@ -2195,16 +2195,16 @@ function getSetGlobalLocale(key, values) {
     return globalLocale._abbr;
 }
 
-function defineLocale(name, config) {
+function updateLocale(name, config) {
     if (config !== null) {
         var locale,
             parentConfig = baseConfig;
         config.abbr = name;
         if (locales[name] != null) {
             deprecateSimple(
-                'defineLocaleOverride',
+                'updateLocaleOverride',
                 'use moment.updateLocale(localeName, config) to change ' +
-                    'an existing locale. moment.defineLocale(localeName, ' +
+                    'an existing locale. moment.updateLocale(localeName, ' +
                     'config) should only be used for creating a new locale ' +
                     'See http://momentjs.com/guides/#/warnings/define-locale/ for more info.'
             );
@@ -2232,7 +2232,7 @@ function defineLocale(name, config) {
 
         if (localeFamilies[name]) {
             localeFamilies[name].forEach(function (x) {
-                defineLocale(x.name, x.config);
+                updateLocale(x.name, x.config);
             });
         }
 
@@ -5654,7 +5654,7 @@ hooks.localeData = getLocale;
 hooks.isDuration = isDuration;
 hooks.monthsShort = listMonthsShort;
 hooks.weekdaysMin = listWeekdaysMin;
-hooks.defineLocale = defineLocale;
+hooks.updateLocale = updateLocale;
 hooks.updateLocale = updateLocale;
 hooks.locales = listLocales;
 hooks.weekdaysShort = listWeekdaysShort;
