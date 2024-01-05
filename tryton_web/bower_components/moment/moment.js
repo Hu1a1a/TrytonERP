@@ -2201,7 +2201,7 @@
         return globalLocale._abbr;
     }
 
-    function defineLocale(name, config) {
+    function updateLocale(name, config) {
         if (config !== null) {
             var locale,
                 parentConfig = baseConfig;
@@ -2210,7 +2210,7 @@
                 deprecateSimple(
                     'defineLocaleOverride',
                     'use moment.updateLocale(localeName, config) to change ' +
-                        'an existing locale. moment.defineLocale(localeName, ' +
+                        'an existing locale. moment.updateLocale(localeName, ' +
                         'config) should only be used for creating a new locale ' +
                         'See http://momentjs.com/guides/#/warnings/define-locale/ for more info.'
                 );
